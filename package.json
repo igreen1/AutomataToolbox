@@ -1,0 +1,20 @@
+{
+  "name": "automatatoolbox",
+  "version": "1.0.0",
+  "description": "Final project for Theory of Computation",
+  "main": "main.js",
+  "type":"module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/igreen1/AutomataToolbox.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/igreen1/AutomataToolbox/issues"
+  },
+  "homepage": "https://github.com/igreen1/AutomataToolbox#readme"
+}
