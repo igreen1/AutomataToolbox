@@ -1,5 +1,4 @@
-import { NFA as nfa } from "./nfa.js"
-import readline from 'readline'
+import { NFA as nfa } from "./src/nfa.js"
 
 let delta = [
   {start: 'a', end: 'b', symbol:'0' },
@@ -11,7 +10,7 @@ let delta = [
 
 let acceptStates = ['c']
 
-let startState = 'a'
+let startState = ['a']
 
 const mynfa = new nfa(delta, acceptStates, startState)
 
@@ -22,5 +21,12 @@ console.log(mynfa.checkString("1001"))
 console.log(mynfa.checkString("1101"))
 console.log(mynfa.checkString("abc"))
 
+delta = [
+  {start: 'a', end: 'b', symbol:'0' },
+  {start: 'a', end: 'c', symbol: '1'},
+  {start: 'b', end: 'a', symbol: '0'},
+  {start: 'b', end: 'c', symbol: '1'},
+  {start: 'c', end:'b', symbol: '0'},
+]
 
 
