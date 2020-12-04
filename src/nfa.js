@@ -1,3 +1,5 @@
+const lambda = '/'
+
 class node {
   //Give the node a name :)
   constructor(name) {
@@ -8,14 +10,20 @@ class node {
   //Add an edge to the graph
   addTransition(nextNode, symbol) {
     const newTransition = { symbol: symbol, nextNode: nextNode }
-    this.transitionFunction.push(newTransition)
+    if(!(newTransition.nextNode === this && newTransition.symbol === lambda))
+      this.transitionFunction.push(newTransition)
+    else
+      console.warn(`A self referential edge was found at ${this.name}. It was automatically removed`)
+  }
+
+  removeSelfreferentialNodes(){
+    this.transitionFunction = this.transitionFunction.filter(({nextNode, symbol}) => !(nextNode === this && symbol === lambda))
   }
 
   //Return a array of node (names)
   transition(transitionSymbol) {
     return this.transitionFunction
-      .filter(({ symbol }) => symbol === transitionSymbol)
-      .map(({ nextNode }) => nextNode)
+      .filter(({ symbol }) => symbol === transitionSymbol || symbol === lambda)
   }
 }
 
@@ -24,14 +32,17 @@ class NFA {
   constructor(transitionFunction, acceptStates, startNode) {
 
     if(transitionFunction === null || acceptStates === null || startNode === null){
-      throw "Null arguments not accepted"
+      throw {message:'Null arguments not accepted'}
     }
 
     if(typeof startNode === 'object'){
       try{
         startNode = startNode[0]
+        if(startNode == undefined){
+          throw {message:'Start node datatype is invalid; unable to recover'}
+        }
       }catch(err){
-        throw "Start node datatype is invalid; unable to recover"
+        throw {message:'Start node datatype is invalid; unable to recover'}
       }
     }
 
@@ -59,37 +70,131 @@ class NFA {
     this.acceptNodes = this.nodes.filter(({ name }) =>
       acceptStates.includes(name)
     )
+    this.validateNFA();
+  }
+
+  validateNFA(){
+    //check for lambda cycles
+    //check for single-edge lambda cycles
+    //a lambda transition pointing to the same ndoe
+    //this is done in the node construction so a little redundant ha
+    this.nodes.forEach((node)=>node.removeSelfreferentialNodes());
+
+    //check for double-edge lambda cycles
+    //two nodes that each are a lambda move from each other
+    //these nodes are equivalent, combine them
+    this.nodes.forEach((currNode)=>{
+      currNode.transition(lambda)
+      .forEach(({nextNode}) =>{
+        if(nextNode.transition(lambda).map(({nextNode})=>nextNode).includes(currNode)){
+          this.combineNodes(nextNode, currNode)
+          console.warn(`Poorly defined NFA. Nodes ${currNode.name} and ${nextNode.name} must be combined`)
+        }
+      })
+    })
+
+    //check if the purely lambda graph has cycles
+    //if it does by now, throw an error
+    //this graph can't be fixed :(
+    //only focus on lambda moves and perform a simple cycle-detection algorithm
+    if( this.isCyclic(
+      this.nodes.map((node)=>node.transition(lambda).map(({nextNode})=>nextNode))
+    )){
+      throw {Message:`NFA is poorly defined and contains a lambda-cycle.`}
+    }
+  }
+
+  isCyclic(graph){
+    //determines if a graph is cyclic 
+    graph.map((node)=>{node.visited=false; node.onRecStack=false; return node;})
+    .forEach((node)=>{
+      if(node.visited===false){
+        if(this.isCyclicUtil(node))
+          return true
+      }
+    })
+    return false;
+  }
+
+  isCyclicUtil(v){
+    v.visited=true
+    v.onRecStack=true
+
+    v.map((node)=>node.transition(lambda).map(({nextNode})=>nextNode))
+    .forEach((neighbor)=>{
+      if(!neighbor.visited){
+        if(this.isCyclicUtil(neighbor)){
+          return true
+        }
+      } else if (neighbor.onRecStack){
+        return true
+      }
+    })
+    v.onRecStack=false
+    return false
+  }
+
+  combineNodes(n1, n2){
+    //make n1 have all the transitions of n2
+    n1.transitionFunction.push(...n2.transitionFunction)
+    //make everything that ponts to n2 point to n1
+    this.nodes.forEach((node)=>{
+      node.transitionFunction.forEach((transition)=>{
+        if(transition.nextNode === n2) transition.nextNode=n1
+      })
+    })
+    //erase self-referential calls
+    n1.removeSelfreferentialNodes()
+    //remove n2
+    this.nodes = this.nodes.filter((node) => node !== n2)
+  }
+
+  //
+  findLambdaCycles(){
+
   }
 
   getNextStates (transitionSymbol, currNode) {
-    const x = this.nodes
+    return this.nodes
       .find(({name}) => name === currNode.name)
       .transition(transitionSymbol)
-      for(let y in x) 
-      return x
   }
 
   end (currNode)  {
-    return this.acceptNodes.includes(currNode)
+    const isAccept = this.acceptNodes.includes(currNode)
+    if(!isAccept){
+      //check lambda-adjacent nodes 
+      const nextStates = this.getNextStates(lambda, currNode)
+        for(let state in nextStates){
+          if(this.end(nextStates[state].nextNode))
+            return true
+        }
+    }
+    return isAccept
   }
 
   acceptString (str, currNode) {
     if (str.length === 0){
-      return this.end(currNode)
+      return this.end(currNode);
     }
 
     if (!this.alphabet.includes(str[0])){
       throw {message:'Symbol not part of alphabet'}
     }
-
     const nextStates = this.getNextStates(str[0], currNode)
+
     if (!nextStates || nextStates.length === 0){ 
       return false
     }
     for (let state in nextStates) {
-      if (this.acceptString(str.substring(1), nextStates[state])) 
+      if(nextStates[state].symbol === lambda){
+        if(this.acceptString(str, nextStates[state].nextNode))
+          return true
+      }
+      else if(this.acceptString(str.substring(1), nextStates[state].nextNode)) 
         return true
     }
+    return false
   }
 
   checkString (str) {

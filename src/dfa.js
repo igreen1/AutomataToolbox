@@ -5,7 +5,7 @@ class DFA extends NFA {
   constructor(transitionFunction, acceptStates, startState){
     super(transitionFunction, acceptStates, startState)
     if(!this.validateDFA())
-      throw 'DFA validation failed'
+      throw {message:'DFA validation failed'}
   }
 
   validateDFA(){

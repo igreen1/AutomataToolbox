@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Final project for Theory of Computation",
   "main": "main.js",
-  "type":"module",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha __tests__/**/*.js"
   },
   "repository": {
     "type": "git",
@@ -16,5 +16,9 @@
   "bugs": {
     "url": "https://github.com/igreen1/AutomataToolbox/issues"
   },
-  "homepage": "https://github.com/igreen1/AutomataToolbox#readme"
+  "homepage": "https://github.com/igreen1/AutomataToolbox#readme",
+  "devDependencies": {
+    "eslint": "^7.14.0",
+    "mocha": "^8.2.1"
+  }
 }

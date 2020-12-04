@@ -21,6 +21,11 @@ const orNFA = function(nfa0, nfa1){
 
 }
 
-const 
+export {
+  parseRegex,
+  createSimpleNFA,
+  concatNFA,
+  starNFA,
+  orNFA,
 
-export {parseRegex}
+}
