@@ -13,7 +13,7 @@ class node {
     if(!(newTransition.nextNode === this && newTransition.symbol === lambda))
       this.transitionFunction.push(newTransition)
     else
-      console.warn(`A self referential edge was found at ${this.name}. It was automatically removed`)
+      console.warn(`A self referential lambda-move edge was found at ${this.name}. It was automatically removed`)
   }
 
   removeSelfreferentialNodes(){
@@ -71,6 +71,7 @@ class NFA {
       acceptStates.includes(name)
     )
     this.validateNFA();
+
   }
 
   validateNFA(){
@@ -83,55 +84,17 @@ class NFA {
     //check for double-edge lambda cycles
     //two nodes that each are a lambda move from each other
     //these nodes are equivalent, combine them
+
     this.nodes.forEach((currNode)=>{
       currNode.transition(lambda)
       .forEach(({nextNode}) =>{
         if(nextNode.transition(lambda).map(({nextNode})=>nextNode).includes(currNode)){
           this.combineNodes(nextNode, currNode)
-          console.warn(`Poorly defined NFA. Nodes ${currNode.name} and ${nextNode.name} must be combined`)
+          console.warn(`Poorly defined NFA. Nodes ${currNode.name} and ${nextNode.name} must be combined. This will be done`)
         }
       })
     })
 
-    //check if the purely lambda graph has cycles
-    //if it does by now, throw an error
-    //this graph can't be fixed :(
-    //only focus on lambda moves and perform a simple cycle-detection algorithm
-    if( this.isCyclic(
-      this.nodes.map((node)=>node.transition(lambda).map(({nextNode})=>nextNode))
-    )){
-      throw {Message:`NFA is poorly defined and contains a lambda-cycle.`}
-    }
-  }
-
-  isCyclic(graph){
-    //determines if a graph is cyclic 
-    graph.map((node)=>{node.visited=false; node.onRecStack=false; return node;})
-    .forEach((node)=>{
-      if(node.visited===false){
-        if(this.isCyclicUtil(node))
-          return true
-      }
-    })
-    return false;
-  }
-
-  isCyclicUtil(v){
-    v.visited=true
-    v.onRecStack=true
-
-    v.map((node)=>node.transition(lambda).map(({nextNode})=>nextNode))
-    .forEach((neighbor)=>{
-      if(!neighbor.visited){
-        if(this.isCyclicUtil(neighbor)){
-          return true
-        }
-      } else if (neighbor.onRecStack){
-        return true
-      }
-    })
-    v.onRecStack=false
-    return false
   }
 
   combineNodes(n1, n2){

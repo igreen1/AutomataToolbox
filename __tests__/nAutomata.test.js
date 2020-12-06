@@ -1,5 +1,5 @@
 import { NFA } from "../src/nfa.js"
-import {  ok, deepStrictEqual, match, throws, fail} from 'assert'
+import { deepStrictEqual, throws} from 'assert'
 
 describe('NFA tests', () => {
   it('NFA null args err', () => {
@@ -114,7 +114,7 @@ describe('NFA tests', () => {
     deepStrictEqual(simpleNFA.checkString('0'), true)
 
   })
-    it('cyclic nfa', ()=>{
+    it('n-depth cyclic nfa', ()=>{
     const delta = [
       {start:'a', end:'b', symbol:'/'}, // a '/' = lambda in my notation
       {start:'b', end:'b', symbol:'0'},
@@ -133,12 +133,9 @@ describe('NFA tests', () => {
     const startState=['a']
     const simpleNFA = new NFA(delta, acceptStates, startState)
 
-    deepStrictEqual(simpleNFA.checkString('0'), true)
-    deepStrictEqual(simpleNFA.checkString('01'), false)
-    deepStrictEqual(simpleNFA.checkString('011111110'), true)
-    deepStrictEqual(simpleNFA.checkString('01010101010'), true)
-    deepStrictEqual(simpleNFA.checkString('0101010101'), false)
-    deepStrictEqual(simpleNFA.checkString('0'), true)
+    //TODO
+
+    // deepStrictEqual(simpleNFA.checkString(''), true)
 
   })
 })
