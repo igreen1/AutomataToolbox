@@ -92,7 +92,6 @@ describe('DFA tests', () => {
     ]
     const acceptStates = ['c']
     let startState = 'a'
-
     throws(()=>(new DFA(delta, acceptStates, startState)), {message:'DFA validation failed'} )
 
   })

@@ -114,7 +114,7 @@ describe('NFA tests', () => {
     deepStrictEqual(simpleNFA.checkString('0'), true)
 
   })
-    it('n-depth cyclic nfa', ()=>{
+  it('n-depth cyclic nfa', ()=>{
     const delta = [
       {start:'a', end:'b', symbol:'/'}, // a '/' = lambda in my notation
       {start:'b', end:'b', symbol:'0'},
@@ -137,5 +137,35 @@ describe('NFA tests', () => {
 
     // deepStrictEqual(simpleNFA.checkString(''), true)
 
+  })
+  it('get start node', ()=>{
+    const delta = [
+      {start: 'a', end: 'b', symbol:'0' },
+      {start: 'a', end: 'c', symbol: '1'},
+      {start: 'b', end: 'a', symbol: '0'},
+      {start: 'b', end: 'c', symbol: '1'},
+      {start: 'c', end:'b', symbol: '0'},
+    ]
+    const acceptStates = ['c']
+    const startState = ['a']
+
+    const simpleNFA = new NFA(delta, acceptStates, startState)
+
+    deepStrictEqual(simpleNFA.startNode.name, 'a')
+  })
+  it('get end nodes', ()=>{
+    const delta = [
+      {start: 'a', end: 'b', symbol:'0' },
+      {start: 'a', end: 'c', symbol: '1'},
+      {start: 'b', end: 'a', symbol: '0'},
+      {start: 'b', end: 'c', symbol: '1'},
+      {start: 'c', end:'b', symbol: '0'},
+    ]
+    const acceptStates = ['b','c']
+    const startState = ['a']
+
+    const simpleNFA = new NFA(delta, acceptStates, startState)
+
+    deepStrictEqual(simpleNFA.acceptNodes.map(({name})=>name), ['b', 'c'])
   })
 })

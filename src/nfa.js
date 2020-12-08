@@ -1,4 +1,4 @@
-const lambda = '/'
+import {lambda} from './global.js'
 
 class node {
   //Give the node a name :)
@@ -20,7 +20,7 @@ class node {
     this.transitionFunction = this.transitionFunction.filter(({nextNode, symbol}) => !(nextNode === this && symbol === lambda))
   }
 
-  //Return a array of node (names)
+  //Return a array of nodes and symbols
   transition(transitionSymbol) {
     return this.transitionFunction
       .filter(({ symbol }) => symbol === transitionSymbol || symbol === lambda)
@@ -32,6 +32,9 @@ class NFA {
   constructor(transitionFunction, acceptStates, startNode) {
 
     if(transitionFunction === null || acceptStates === null || startNode === null){
+      throw {message:'Null arguments not accepted'}
+    }
+    if(transitionFunction === undefined || acceptStates === undefined || startNode === undefined){
       throw {message:'Null arguments not accepted'}
     }
 
@@ -48,7 +51,7 @@ class NFA {
 
     //find all node names and the alphabet by inference
     this.alphabet = [
-      ...new Set(transitionFunction.map(({ symbol }) => symbol)),
+      ...new Set(transitionFunction.map(({ symbol }) => symbol).filter((symbol)=>symbol!==lambda)),
     ]
     const nodeNames = [
       ...new Set(transitionFunction.flatMap(({ start, end }) => [start, end])),
@@ -66,7 +69,9 @@ class NFA {
           symbol
         )
     })
-    this.startNode = startNode
+
+    this.startNode = this.nodes.find(({name}) => name === startNode)
+
     this.acceptNodes = this.nodes.filter(({ name }) =>
       acceptStates.includes(name)
     )
@@ -112,14 +117,8 @@ class NFA {
     this.nodes = this.nodes.filter((node) => node !== n2)
   }
 
-  //
-  findLambdaCycles(){
-
-  }
-
   getNextStates (transitionSymbol, currNode) {
-    return this.nodes
-      .find(({name}) => name === currNode.name)
+    return currNode
       .transition(transitionSymbol)
   }
 
@@ -141,7 +140,7 @@ class NFA {
       return this.end(currNode);
     }
 
-    if (!this.alphabet.includes(str[0])){
+    if (!this.alphabet.includes(str[0]) && str[0] !== lambda){
       throw {message:'Symbol not part of alphabet'}
     }
     const nextStates = this.getNextStates(str[0], currNode)
@@ -161,9 +160,8 @@ class NFA {
   }
 
   checkString (str) {
-    const start = this.nodes.find(({name}) => name === this.startNode)
     //somehow, the false from accept string turns into undefined here
-    return this.acceptString(str, start) === true
+    return this.acceptString(str, this.startNode) === true
   }
 }
 

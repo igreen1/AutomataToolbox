@@ -1,0 +1,3 @@
+const lambda = '/'
+
+export {lambda}
