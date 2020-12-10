@@ -8,11 +8,23 @@ import {lambda} from './global.js'
 // so concatNFA(nfa0, nfa1)
 // returns nothing but nfa0 will now hold nfa0.nfa1
 
-//Accept a single-character string and creates a node for it
-const createSingeNodeNFA = function(simpleRegex) {
+
+const createRegexNFA = function(exp){
+  const delta = [
+    {start: ``, end:exp, symbol:exp }
+  ]
+  const startState = ``
+  const endState = [exp]
+
+  return new NFA(delta, endState, startState)
+
+}
+
+//Accept a single-character string as a name, only accepts '' (empty string)
+const createLambdaNode = function(name) {
   let delta = []
-  let startState = simpleRegex
-  let endState = [simpleRegex]
+  let startState = name
+  let endState = [name]
 
   return new NFA(delta, endState, startState)
 }
@@ -29,26 +41,9 @@ const createEmptyNFA = function() {
 
 // const NFADeepCopy = function(nfa0){
 //   //TODO - unfinished
-//   const resultNFA = createEmptyNFA()
-//   resultNFA.nodes = []
-
-//   const translationTable = {}
-
-//   //First create the nodes (since the transitions use linking)
-//   nfa0.nodes.forEach((oldNode)=>{
-//     let copyNode = new node(oldNode.name)
-//     resultNFA.nodes.push(copyNode)
-//     translationTable.oldNode = copyNode
-//   })
-
-//   nfa0.nodes.forEach((oldNode)=>{
-//     oldNode.transitionFunction.forEach((transition)=>{
-//       translationTable.oldNode.addTransition(transition.symbol, translationTable.oldNode)
-//     })
-//   })
-
-//   resultNFA.alphabet = [...nfa0.alphabet]
-//   resultNFA.acceptNodes = nfa0.acceptNodes.map((n)=>translationTable.n)
+//   const resultNFA = createLambdaNode('')
+  
+  
 
 //   return resultNFA
 // }
@@ -69,6 +64,7 @@ const concatNFA = function(nfa0, nfa1){
 
   ]
 
+  return nfa0
 }
 
 const starNFA = function(nfa0){
@@ -85,6 +81,7 @@ const starNFA = function(nfa0){
   })
   nfa0.acceptNodes.push(nfa0.startNode)
 
+  return nfa0
 }
 
 const orNFA = function(nfa0, nfa1){
@@ -102,14 +99,17 @@ const orNFA = function(nfa0, nfa1){
       ...new Set([...nfa0.alphabet, ...nfa1.alphabet]),
   ]
   nfa0.acceptNodes.push(...nfa1.acceptNodes)
-  
+ 
+  return nfa0
 }
 
+// const orManyNFA = function(...nfa)
+
 export {
-  createSingeNodeNFA,
-  // NFADeepCopy,
   concatNFA,
   starNFA,
   orNFA,
   createEmptyNFA,
+  createRegexNFA,
+  createLambdaNode,
 }
