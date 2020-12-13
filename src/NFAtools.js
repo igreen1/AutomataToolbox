@@ -8,6 +8,41 @@ import {lambda} from './global.js'
 // so concatNFA(nfa0, nfa1)
 // returns nothing but nfa0 will now hold nfa0.nfa1
 
+const deepCopyNFA = function(nfa){
+  const result = createEmptyNFA()
+  result.alphabet = [...nfa.alphabet]
+
+  result.nodes = []
+  result.acceptNodes = []
+
+  //Names are unused in most of the program (except nfa->dfa)
+  //here instead create a one-to-one look up table
+  const lookupTable = new WeakMap()
+  const lookup = function(currNode){
+    return lookupTable.get(currNode)
+  }
+
+  //Create the nodes of the graph
+  nfa.nodes.forEach((NFANode)=>{
+    const DFANode = new node(NFANode.name)
+    result.nodes.push(DFANode)
+    lookupTable.set(NFANode, DFANode)
+  })
+
+  nfa.nodes.forEach((NFANode)=>{
+    NFANode.transitionFunction.forEach((transition)=>{
+      lookup(NFANode).transitionFunction.push(transition.symbol, lookup(transition.nextNode))
+    })
+  })
+
+  result.startNode = lookup(nfa.startNode)
+  nfa.acceptNodes.forEach((node)=>{
+    result.acceptNodes.push(lookup(node))
+  })
+
+  return result
+
+}
 
 const createRegexNFA = function(exp){
   const delta = [
@@ -55,19 +90,23 @@ const concatNFA = function(nfa0, nfa1){
   //so if the user is bad with names.. meh, not my problem
   //maybe I'll make a helper function in global for that one day
 
-  nfa0.acceptNodes.map((node)=>{
+  const resultNFA = deepCopyNFA(nfa0);
+
+  resultNFA.acceptNodes.map((node)=>{
     node.transitionFunction.push({symbol:lambda, nextNode:nfa1.startNode})
   })
-  nfa0.acceptNodes = [...nfa1.acceptNodes]
-  nfa0.alphabet = [
+  resultNFA.acceptNodes = [...nfa1.acceptNodes]
+  resultNFA.alphabet = [
       ...new Set([...nfa0.alphabet, ...nfa1.alphabet]),
 
   ]
 
-  return nfa0
+  return resultNFA
 }
 
 const starNFA = function(nfa0){
+
+  const resultNFA = deepCopyNFA(nfa0)
 
   //create a single node
   const lambdaNode = new node('')
@@ -112,4 +151,5 @@ export {
   createEmptyNFA,
   createRegexNFA,
   createLambdaNode,
+  deepCopyNFA,
 }

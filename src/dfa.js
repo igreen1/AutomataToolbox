@@ -10,6 +10,7 @@ class DFA extends NFA {
   }
 
   validateDFA(){
+    this.alphabet = this.alphabet.filter((symbol) => symbol !== lambda)
     return this.nodes.every((node) => {
       let tranSymbols = node.transitionFunction.map(({symbol}) => symbol)
       if(tranSymbols.includes(lambda)) return false
@@ -21,6 +22,11 @@ class DFA extends NFA {
       return true
     })
   } 
+
+  //Overrwrite
+  end (currNode) {
+    return this.acceptNodes.includes(currNode)
+  }
 
 }
 export {DFA}

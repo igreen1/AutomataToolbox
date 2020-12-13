@@ -84,9 +84,7 @@ describe('NFA tests', () => {
     deepStrictEqual(simpleNFA.checkString('01010101010'), true)
     deepStrictEqual(simpleNFA.checkString('0101010101'), false)
     deepStrictEqual(simpleNFA.checkString('0'), true)
-    
-
-
+  
   })
   it('poorly defined nfa', ()=>{
     const delta = [

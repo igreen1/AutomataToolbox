@@ -1,7 +1,8 @@
 import { NFA } from "../src/nfa.js"
-import { concatNFA, starNFA, orNFA,createRegexNFA,} from '../src/NFAtools.js'
+import { concatNFA, starNFA, orNFA,createRegexNFA, deepCopyNFA,} from '../src/NFAtools.js'
 import { deepStrictEqual, throws} from 'assert'
 import { lambda } from "../src/global.js"
+import {nDepthEquivalent} from '../src/generalAutomataTools.js'
 
 describe('NFA tools test', () => {
   it('Create simple regex nfa', ()=>{
@@ -273,6 +274,23 @@ describe('NFA tools test', () => {
     deepStrictEqual(nfa0.checkString('1') , true)
     deepStrictEqual(nfa0.checkString('01') , false)
     deepStrictEqual(nfa0.checkString('10') , false)
+
+  })
+  it('Copy NFA', ()=>{
+    //Ends with 1, no consecutive 1
+    const delta = [
+      {start: 'a', end: 'b', symbol:'0' },
+      {start: 'a', end: 'c', symbol: '1'},
+      {start: 'b', end: 'a', symbol: '0'},
+      {start: 'b', end: 'c', symbol: '1'},
+      {start: 'c', end:'b', symbol: '0'},
+    ]
+    const acceptStates = ['c']
+    const startState = ['a']
+
+    const simpleNFA = new NFA(delta, acceptStates, startState)
+
+    deepStrictEqual(nDepthEquivalent(simpleNFA, deepCopyNFA(simpleNFA)), true)
 
   })
 })
