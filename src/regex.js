@@ -36,9 +36,9 @@ const parseRegexOr = function(exp){
       return parseRegexConcat(currExp)
   })
   //or all the nfas
-  const result = splitExp[0]
+  let result = splitExp[0]
   for(let i =1 ; i < splitExp.length; i++){
-    orNFA(result, splitExp[i])
+    result = orNFA(result, splitExp[i])
   }
   return result
 }
@@ -58,9 +58,9 @@ const parseRegexConcat = function(exp){
   })
 
   //combine nfas
-  const result = splitExp[0]
+  let result = splitExp[0]
   for(let i =1 ; i < splitExp.length; i++){
-    concatNFA(result, splitExp[i])
+    result = concatNFA(result, splitExp[i])
   }
   return result
 }

@@ -2,7 +2,7 @@ import { NFA } from "../src/nfa.js"
 import { concatNFA, starNFA, orNFA,createRegexNFA, deepCopyNFA,} from '../src/NFAtools.js'
 import { deepStrictEqual, throws} from 'assert'
 import { lambda } from "../src/global.js"
-import {nDepthEquivalent} from '../src/generalAutomataTools.js'
+import {nDepthEquivalent, printAutomata} from '../src/generalAutomataTools.js'
 
 describe('NFA tools test', () => {
   it('Create simple regex nfa', ()=>{
@@ -34,15 +34,44 @@ describe('NFA tools test', () => {
     deepStrictEqual(exp0or1NFA.checkString('01') , false)
     deepStrictEqual(exp0or1NFA.checkString('10') , false)
 
-    //for now, exp0NFA has been modified by the or move, 
-    // this is a TODO to fix :)
 
     const expconcatNFA = concatNFA(exp0NFA, exp1NFA)
 
     deepStrictEqual(expconcatNFA.checkString('01') , true)
-    deepStrictEqual(expconcatNFA.checkString('11') , true)
+    deepStrictEqual(expconcatNFA.checkString('11') , false)
 
   })
+  
+  it('Chain operations together', ()=>{
+    let delta0 = [
+      {start: 'a', end:'b', symbol: '0'}
+    ]
+    let start0 = 'a'
+    let end0 = ['b']
+
+    let delta1 = [
+      {start: 'aa', end:'bb', symbol: '1'}
+    ]
+    let start1 = 'aa'
+    let end1 = ['bb']
+
+    const nfa0 = new NFA(delta0, end0, start0) //0
+    const nfa1 = new NFA(delta1, end1, start1) //1
+
+    deepStrictEqual(nfa0.checkString('0') , true)
+    deepStrictEqual(nfa1.checkString('1') , true)
+    deepStrictEqual(nfa0.checkString('00') , false)
+    deepStrictEqual(nfa1.checkString('11') , false)
+
+    const concatThenOr = orNFA(concatNFA(nfa0, nfa1), nfa1)
+    
+    deepStrictEqual(concatThenOr.checkString('0') , false)
+    deepStrictEqual(concatThenOr.checkString('1') , true)
+    deepStrictEqual(concatThenOr.checkString('01') , true)
+    deepStrictEqual(concatThenOr.checkString('00') , false)
+
+  })
+  
   it('Concat 1 node NFAs', () => {
 
     let delta0 = [
@@ -57,7 +86,7 @@ describe('NFA tools test', () => {
     let start1 = 'aa'
     let end1 = ['bb']
 
-    const nfa0 = new NFA(delta0, end0, start0)
+    let nfa0 = new NFA(delta0, end0, start0)
     const nfa1 = new NFA(delta1, end1, start1)
 
     deepStrictEqual(nfa0.checkString('0') , true)
@@ -65,12 +94,12 @@ describe('NFA tools test', () => {
     deepStrictEqual(nfa0.checkString('00') , false)
     deepStrictEqual(nfa1.checkString('11') , false)
 
-    concatNFA(nfa0, nfa1)
+    const cNFA = concatNFA(nfa0, nfa1)
 
-    deepStrictEqual(nfa0.checkString('0') , false)
+    deepStrictEqual(cNFA.checkString('0') , false)
     deepStrictEqual(nfa1.checkString('1') , true)
-    deepStrictEqual(nfa0.checkString('01') , true)
-    deepStrictEqual(nfa0.checkString('00') , false)
+    deepStrictEqual(cNFA.checkString('01') , true)
+    deepStrictEqual(cNFA.checkString('00') , false)
     deepStrictEqual(nfa1.checkString('11') , false)
 
   })
@@ -91,7 +120,7 @@ describe('NFA tools test', () => {
     let start1 = 'a'
     let end1 = ['c']
 
-    const nfa0 = new NFA(delta0, end0, start0)
+    let nfa0 = new NFA(delta0, end0, start0)
     const nfa1 = new NFA(delta1, end1, start1)
 
     deepStrictEqual(nfa0.checkString('0') , true)
@@ -102,7 +131,7 @@ describe('NFA tools test', () => {
     deepStrictEqual(nfa1.checkString('11') , true)
     deepStrictEqual(nfa1.checkString('111') , false)
 
-    concatNFA(nfa0, nfa1)
+    nfa0 = concatNFA(nfa0, nfa1)
 
     deepStrictEqual(nfa0.checkString('01') , true)
     deepStrictEqual(nfa0.checkString('0011') , true)
@@ -126,51 +155,17 @@ describe('NFA tools test', () => {
       let start1 = 'aa'
       let end1 = ['bb']
 
-      const nfa0 = new NFA(delta0, end0, start0)
+      let nfa0 = new NFA(delta0, end0, start0)
       const nfa1 = new NFA(delta1, end1, start1)
 
-      concatNFA(nfa0, nfa1)
+      nfa0 = concatNFA(nfa0, nfa1)
       return nfa0
     }
 
-    const nfa0 = testConcatScope()
+    let nfa0 = testConcatScope()
 
     deepStrictEqual(nfa0.checkString('0') , false)
     deepStrictEqual(nfa0.checkString('01') , true)
-
-  })
-  it('Deep Copy', ()=>{
-    console.log("Implementation not required, skipping")
-    // const delta = [
-    //   {start:'a', end:'b', symbol:'/'}, // a '/' = lambda in my notation
-    //   {start:'b', end:'b', symbol:'0'},
-    //   {start:'b', end:'b', symbol:'1'},
-    //   {start:'b', end:'c', symbol:'0'},
-    //   {start:'b', end:'d', symbol:'1'},
-    //   {start:'c', end:'d', symbol:'1'},
-    //   {start:'d', end:'c', symbol:'0'},
-    //   {start:'c', end:'e', symbol:'/'},
-    // ]
-    // const acceptStates=['e']
-    // const startState=['a']
-
-    // const simpleNFA = new NFA(delta, acceptStates, startState)
-    // const copyNFA = NFADeepCopy(simpleNFA);
-
-    // console.log(copyNFA)
-
-    // const stringPermuteViaRecursion = (str) =>{
-    //   if(str.length > 5) return
-
-    //   let str0 = str + '0';
-    //   let str1 = str + '1';
-
-    //   deepStrictEqual(copyNFA.checkString(str0), simpleNFA.checkString(str0))
-    //   deepStrictEqual(copyNFA.checkString(str1), simpleNFA.checkString(str1))
-
-    // }
-
-    // stringPermuteViaRecursion("");
 
   })
   it('Kleene star ', ()=>{
@@ -182,11 +177,11 @@ describe('NFA tools test', () => {
     let end = ['b']
     const nfa = new NFA(delta, end, start)
 
-    starNFA(nfa)
+    const nfa0 = starNFA(nfa)
 
-    deepStrictEqual(nfa.checkString('') , true)
-    deepStrictEqual(nfa.checkString('0') , true)
-    deepStrictEqual(nfa.checkString('00') , true)
+    deepStrictEqual(nfa0.checkString('') , true)
+    deepStrictEqual(nfa0.checkString('0') , true)
+    deepStrictEqual(nfa0.checkString('00') , true)
   })
   it('Or nfa', () => {
 
@@ -202,7 +197,7 @@ describe('NFA tools test', () => {
     let start1 = 'aa'
     let end1 = ['bb']
 
-    const nfa0 = new NFA(delta0, end0, start0)
+    let nfa0 = new NFA(delta0, end0, start0)
     const nfa1 = new NFA(delta1, end1, start1)
 
     deepStrictEqual(nfa0.checkString('0') , true)
@@ -210,7 +205,7 @@ describe('NFA tools test', () => {
     deepStrictEqual(nfa0.checkString('00') , false)
     deepStrictEqual(nfa1.checkString('11') , false)
 
-    orNFA(nfa0, nfa1)
+    nfa0 = orNFA(nfa0, nfa1)
 
     deepStrictEqual(nfa0.checkString('0') , true)
     deepStrictEqual(nfa0.checkString('1') , true)
@@ -232,14 +227,14 @@ describe('NFA tools test', () => {
       let start1 = 'aa'
       let end1 = ['bb']
 
-      const nfa0 = new NFA(delta0, end0, start0)
+      let nfa0 = new NFA(delta0, end0, start0)
       const nfa1 = new NFA(delta1, end1, start1)
 
-      orNFA(nfa0, nfa1)
+      nfa0 = orNFA(nfa0, nfa1)
       return nfa0
     }
 
-    const nfa0 = testOrScope()
+    let nfa0 = testOrScope()
 
     deepStrictEqual(nfa0.checkString('0') , true)
     deepStrictEqual(nfa0.checkString('1') , true)
@@ -261,14 +256,14 @@ describe('NFA tools test', () => {
       let start1 = 'aa'
       let end1 = ['bb']
 
-      const nfa0 = new NFA(delta0, end0, start0)
+      let nfa0 = new NFA(delta0, end0, start0)
       const nfa1 = new NFA(delta1, end1, start1)
 
-      orNFA(nfa0, nfa1)
+      nfa0 = orNFA(nfa0, nfa1)
       return nfa0
     }
 
-    const nfa0 = testOrScope()
+    let nfa0 = testOrScope()
 
     deepStrictEqual(nfa0.checkString('0') , true)
     deepStrictEqual(nfa0.checkString('1') , true)
@@ -287,6 +282,25 @@ describe('NFA tools test', () => {
     ]
     const acceptStates = ['c']
     const startState = ['a']
+
+    const simpleNFA = new NFA(delta, acceptStates, startState)
+
+    deepStrictEqual(nDepthEquivalent(simpleNFA, deepCopyNFA(simpleNFA)), true)
+
+  })
+  it('Copy more complicated NFA', ()=>{
+    const delta = [
+      {start:'a', end:'b', symbol:'/'}, // a '/' = lambda in my notation
+      {start:'b', end:'b', symbol:'0'},
+      {start:'b', end:'b', symbol:'1'},
+      {start:'b', end:'c', symbol:'0'},
+      {start:'b', end:'d', symbol:'1'},
+      {start:'c', end:'d', symbol:'1'},
+      {start:'d', end:'c', symbol:'0'},
+      {start:'c', end:'e', symbol:'/'},
+    ]
+    const acceptStates=['e']
+    const startState=['a']
 
     const simpleNFA = new NFA(delta, acceptStates, startState)
 

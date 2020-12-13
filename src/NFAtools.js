@@ -9,6 +9,7 @@ import {lambda} from './global.js'
 // returns nothing but nfa0 will now hold nfa0.nfa1
 
 const deepCopyNFA = function(nfa){
+
   const result = createEmptyNFA()
   result.alphabet = [...nfa.alphabet]
 
@@ -17,21 +18,35 @@ const deepCopyNFA = function(nfa){
 
   //Names are unused in most of the program (except nfa->dfa)
   //here instead create a one-to-one look up table
-  const lookupTable = new WeakMap()
+  const lookupTable = {
+    tableA:[],
+    tableB:[],
+    set (a, b){
+      this.tableA.push(a)
+      this.tableB.push(b)
+    },
+    get (a){
+      for(let i = 0; i < this.tableA.length && i < this.tableB.length; i ++){
+        if(this.tableA[i] === a)
+          return this.tableB[i] 
+      }
+      return undefined
+    },
+  }
   const lookup = function(currNode){
     return lookupTable.get(currNode)
   }
 
   //Create the nodes of the graph
   nfa.nodes.forEach((NFANode)=>{
-    const DFANode = new node(NFANode.name)
-    result.nodes.push(DFANode)
-    lookupTable.set(NFANode, DFANode)
+    const resultNode = new node(NFANode.name)
+    result.nodes.push(resultNode)
+    lookupTable.set(NFANode, resultNode)
   })
 
   nfa.nodes.forEach((NFANode)=>{
     NFANode.transitionFunction.forEach((transition)=>{
-      lookup(NFANode).transitionFunction.push(transition.symbol, lookup(transition.nextNode))
+      lookup(NFANode).addTransition(lookup(transition.nextNode), transition.symbol)
     })
   })
 
@@ -74,58 +89,53 @@ const createEmptyNFA = function() {
   return nfa
 }
 
-// const NFADeepCopy = function(nfa0){
-//   //TODO - unfinished
-//   const resultNFA = createLambdaNode('')
-  
-  
-
-//   return resultNFA
-// }
-
-//Puts nfa1 into nfa0
-const concatNFA = function(nfa0, nfa1){
+const concatNFA = function(a, b){
   //Note, because names are pretty much just visual sugar
   //i won't bother with them here
   //so if the user is bad with names.. meh, not my problem
   //maybe I'll make a helper function in global for that one day
 
-  const resultNFA = deepCopyNFA(nfa0);
+  const nfa0 = deepCopyNFA(a);
+  const nfa1 = deepCopyNFA(b);
 
-  resultNFA.acceptNodes.map((node)=>{
-    node.transitionFunction.push({symbol:lambda, nextNode:nfa1.startNode})
+  nfa0.nodes.push(...nfa1.nodes)
+  nfa0.acceptNodes.forEach((node)=>{
+    node.addTransition(nfa1.startNode, lambda)
   })
-  resultNFA.acceptNodes = [...nfa1.acceptNodes]
-  resultNFA.alphabet = [
+
+  nfa0.acceptNodes = [...nfa1.acceptNodes]
+  nfa0.alphabet = [
       ...new Set([...nfa0.alphabet, ...nfa1.alphabet]),
 
   ]
 
-  return resultNFA
+  return nfa0
 }
 
-const starNFA = function(nfa0){
+const starNFA = function(a){
 
-  const resultNFA = deepCopyNFA(nfa0)
+  const resultNFA = deepCopyNFA(a)
 
   //create a single node
   const lambdaNode = new node('')
 
-  lambdaNode.addTransition(nfa0.startNode, lambda)
+  lambdaNode.addTransition(resultNFA.startNode, lambda)
 
-  nfa0.nodes.push(lambdaNode)
-  nfa0.startNode = lambdaNode
-  nfa0.acceptNodes.map((node)=>{
-    node.transitionFunction.push({symbol:lambda, nextNode:nfa0.startNode})
+  resultNFA.nodes.push(lambdaNode)
+  resultNFA.startNode = lambdaNode
+  resultNFA.acceptNodes.map((node)=>{
+    node.addTransition(resultNFA.startNode, lambda)
   })
-  nfa0.acceptNodes.push(nfa0.startNode)
+  resultNFA.acceptNodes.push(resultNFA.startNode)
 
-  return nfa0
+  return resultNFA
 }
 
-const orNFA = function(nfa0, nfa1){
+const orNFA = function(a, b){
 
   const lambdaNode = new node('')
+  const nfa0 = deepCopyNFA(a)
+  const nfa1 = deepCopyNFA(b)
 
   lambdaNode.addTransition(nfa0.startNode, lambda)
   lambdaNode.addTransition(nfa1.startNode, lambda)

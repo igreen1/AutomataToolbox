@@ -3,6 +3,7 @@ import { concatNFA, starNFA, orNFA,createRegexNFA,} from '../src/NFAtools.js'
 import { deepStrictEqual, throws} from 'assert'
 import { lambda } from "../src/global.js"
 import {regexToNFA} from '../src/regex.js'
+import { printAutomata } from "../src/generalAutomataTools.js"
 
 describe('Regex expressions tests', () => {
   it('Simple regex', ()=>{
