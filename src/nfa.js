@@ -28,6 +28,7 @@ class node {
 }
 
 class NFA {
+
   //Creates the 'graph' of the automata
   constructor(transitionFunction, acceptStates, startNode) {
 
@@ -76,7 +77,12 @@ class NFA {
       acceptStates.includes(name)
     )
     this.validateNFA();
+    this.name = 'Some NFA' //This feature was implemented LATE in the cycle so just adding backwards compatibility
 
+  }
+
+  setName(newName){
+    this.name = newName
   }
 
   validateNFA(){
@@ -95,7 +101,7 @@ class NFA {
       .forEach(({nextNode}) =>{
         if(nextNode.transition(lambda).map(({nextNode})=>nextNode).includes(currNode)){
           this.combineNodes(nextNode, currNode)
-          console.warn(`Poorly defined NFA. Nodes ${currNode.name} and ${nextNode.name} must be combined. This will be done`)
+          console.warn(`Poorly defined NFA. Nodes ${currNode.name} and ${nextNode.name} must be combined. This will be done automagically :)`)
         }
       })
     })
@@ -157,6 +163,11 @@ class NFA {
         return true
     }
     return false
+  }
+
+  //better naming but too late to be of use
+  accepts(str){
+    return this.checkString(str)
   }
 
   checkString (str) {
