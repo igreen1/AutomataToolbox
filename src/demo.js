@@ -11,3 +11,9 @@ import { concatNFA, starNFA, orNFA,createRegexNFA,} from './NFAtools.js'
 //script in package.json
 //demo video 
 
+const run = function(){
+
+}
+
+
+export {run}

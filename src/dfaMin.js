@@ -1,5 +1,4 @@
-import {DFA} from './dfa.js'
-import { nfa2dfa, createEmptyDFA,} from './DFATools.js'
+import { createEmptyDFA,} from './DFATools.js'
 import { enforceAutomataNaming_ } from './generalAutomataTools.js'
 import { node } from './nfa.js'
 
@@ -25,7 +24,6 @@ const dfaMin = function(dfa){
   let change = true
   let str = ['0', '1']
   const network = new groupNetwork(dfa)
-  let count = 0
   while(change){
     change = false
     str.forEach((str)=>{
