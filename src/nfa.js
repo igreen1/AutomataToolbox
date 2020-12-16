@@ -198,6 +198,10 @@ class NFA {
     return this.checkString(str)
   }
 
+  acceptsAsDFA(str){
+    return nfa2dfa(this).checkString(str)
+  }
+
   checkString (str) {
     //somehow, the false from accept string turns into undefined here
     return this.acceptString(str, this.startNode) === true

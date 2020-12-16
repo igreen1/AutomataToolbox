@@ -131,9 +131,11 @@ describe('NFA tests', () => {
     const startState=['a']
     const simpleNFA = new NFA(delta, acceptStates, startState)
 
+    deepStrictEqual(simpleNFA.checkString(''), true)
     deepStrictEqual(simpleNFA.accepts(''), true)
 
   })
+  
   it('get start node', ()=>{
     const delta = [
       {start: 'a', end: 'b', symbol:'0' },

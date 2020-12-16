@@ -110,4 +110,27 @@ describe('DFA to NFA', () => {
     deepStrictEqual(nDepthEquivalent(slightlyComplexNFA, dfa, 10),true)
 
   })
+    it('n-depth cyclic nfa', ()=>{
+    const delta = [
+      {start:'a', end:'b', symbol:'/'}, // a '/' = lambda in my notation
+      {start:'b', end:'b', symbol:'0'},
+      {start:'b', end:'b', symbol:'1'},
+      {start:'b', end:'c', symbol:'0'},
+      {start:'b', end:'d', symbol:'1'},
+      {start:'c', end:'d', symbol:'1'},
+      {start:'d', end:'c', symbol:'0'},
+      {start:'c', end:'e', symbol:'/'},
+      {start:'e', end:'e', symbol:'/'},
+      {start:'b', end:'g', symbol:'/'},
+      {start:'g', end:'c', symbol:'/'},
+      {start:'c', end:'b', symbol:'/'}
+    ]
+    const acceptStates=['e']
+    const startState=['a']
+    const cyclicNFA = new NFA(delta, acceptStates, startState)
+    const dfa = nfa2dfa(cyclicNFA)
+
+    deepStrictEqual(nDepthEquivalent(cyclicNFA, dfa, 10),true)
+
+  })
 })

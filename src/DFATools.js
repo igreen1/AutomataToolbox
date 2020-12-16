@@ -41,11 +41,6 @@ const convert2DFAHelper = function(resultDFA, nfa, currNode){
   //Because there is no 'lookup' or 'transition' table, must transit through the nfa
   const equivalentNFANodes = findNFANode(nfa, currNode)
 
-  // equivalentNFANodes.forEach((node)=>{
-  //   if(nfa.acceptNodes.includes(node))
-  //     resultDFA.acceptNodes = [...new Set([...resultDFA.acceptNodes, currNode])]
-  // })
-
   equivalentNFANodes.forEach((node)=>{
     if(nfa.end(node)){
       resultDFA.acceptNodes = [...new Set([...resultDFA.acceptNodes, currNode])]
@@ -53,12 +48,12 @@ const convert2DFAHelper = function(resultDFA, nfa, currNode){
   })
 
   //Find all the nodes adjacent and organize by the symbol by which they are transitioned to 
-  let transitionsFromCurrNode = findAdjacentTransitions(equivalentNFANodes)
+  // let transitionsFromCurrNode = findAdjacentTransitions(nfa, equivalentNFANodes)
 
   let adjacentNodes = {}
   //create a entry for each transition symbol
   resultDFA.alphabet.forEach((alphabetSymbol)=>{
-    adjacentNodes[alphabetSymbol] = []
+    adjacentNodes[alphabetSymbol] = findAdjacentTransitions(nfa, equivalentNFANodes, alphabetSymbol)
   })
 
   //for each entry in adjacent nodes, give EVERY node which can be reached via that symbol
@@ -71,9 +66,11 @@ const convert2DFAHelper = function(resultDFA, nfa, currNode){
     '1': []
   ]
   */
-  transitionsFromCurrNode.forEach((transition)=>{
-    adjacentNodes[transition.symbol].push(transition.nextNode)
-  })
+
+
+  // transitionsFromCurrNode.forEach((transition)=>{
+  //   adjacentNodes[transition.symbol].push(transition.nextNode)
+  // })
 
 
   //Flat map each entry (since they're arrays of arrays)
@@ -107,24 +104,25 @@ const convert2DFAHelper = function(resultDFA, nfa, currNode){
   
 }
 
-const findAdjacentTransitions = function(currNodes, accum){
-  /*
-  Algorithm (todo)
-    -check all non-lambda transitions, push next nodes to result
-    perform lambda moves (if possile)
-      recurse such that those next nodes from lambda return their adjacent nodes 
-    return results
-  */
-  let results = []
-  //grabs EVERY SINGLE transition from this node
-  //keeping in mind, DFA nodes can be compositions of the NFA nodes
-  currNodes.forEach((node)=>{
-    node.transitionFunction.forEach((transition) =>{
-      if(transition.symbol === lambda) results.push(...findAdjacentTransitions([transition.nextNode]))
-      else results.push(transition)
-    })
+//lambdas are essentially automatically ignored so :)
+//a hold over from another time
+const getLambdaNeighbors = function(nfa, nfaNodes){
+  let lambdaAdjacent = []
+  nfaNodes.forEach((node)=>{
+    lambdaAdjacent.push(nfa.getLambdaAdjacent(node))
   })
-  return [...new Set(results)]
+  lambdaAdjacent = [... new Set(lambdaAdjacent)]
+  return lambdaAdjacent
+}
+
+const findAdjacentTransitions = function(nfa, nfaNodes, symbol){
+  
+  let results = []
+
+  nfaNodes.forEach((node)=>{
+    results = [...new Set([...results, ...nfa.getNextStates(symbol, node)])]
+  })
+  return results
 }
 
 
