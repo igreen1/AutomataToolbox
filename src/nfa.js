@@ -1,4 +1,5 @@
 import {lambda} from './global.js'
+import {nfa2dfa} from "../src/DFATools.js"
 
 class node {
   //Give the node a name :)
@@ -20,10 +21,12 @@ class node {
     this.transitionFunction = this.transitionFunction.filter(({nextNode, symbol}) => !(nextNode === this && symbol === lambda))
   }
 
-  //Return a array of nodes and symbols
+  //Return a array of nodes reached by transitions symbol
+  //DOES NOT automatically include lambda moves unless explicity passed lambda
   transition(transitionSymbol) {
     return this.transitionFunction
-      .filter(({ symbol }) => symbol === transitionSymbol || symbol === lambda)
+      .filter(({ symbol }) => symbol === transitionSymbol)
+      .map(({nextNode}) => nextNode)
   }
 }
 
@@ -76,7 +79,7 @@ class NFA {
     this.acceptNodes = this.nodes.filter(({ name }) =>
       acceptStates.includes(name)
     )
-    this.validateNFA();
+    this.simplifyNFA();
     this.name = 'Some NFA' //This feature was implemented LATE in the cycle so just adding backwards compatibility
 
   }
@@ -85,7 +88,7 @@ class NFA {
     this.name = newName
   }
 
-  validateNFA(){
+  simplifyNFA(){
     //check for lambda cycles
     //check for single-edge lambda cycles
     //a lambda transition pointing to the same ndoe
@@ -98,10 +101,10 @@ class NFA {
 
     this.nodes.forEach((currNode)=>{
       currNode.transition(lambda)
-      .forEach(({nextNode}) =>{
+      .forEach((nextNode) =>{
         if(nextNode.transition(lambda).map(({nextNode})=>nextNode).includes(currNode)){
           this.combineNodes(nextNode, currNode)
-          console.warn(`Poorly defined NFA. Nodes ${currNode.name} and ${nextNode.name} must be combined. This will be done automagically :)`)
+          console.warn(`Nodes ${currNode.name} and ${nextNode.name} are best combined This will be done automagically :)`)
         }
       })
     })
@@ -124,18 +127,37 @@ class NFA {
   }
 
   getNextStates (transitionSymbol, currNode) {
-    return currNode
-      .transition(transitionSymbol)
+    const adjacentByLambda = this.getAdjacentByLambda(currNode, [])
+    let results = []
+    adjacentByLambda.forEach((node)=>{
+      const adjacentBySymbol = node.transition(transitionSymbol)
+      results = [...new Set([...results, ...adjacentBySymbol])]
+    })
+    return results
+  }
+
+  getAdjacentByLambda(currNode, results){
+    results.push(currNode)
+    const recurseStack = currNode.transition(lambda).filter((node)=>!results.includes(node))
+                        .filter((node)=>node !== undefined)
+    if(recurseStack.length > 0){
+      recurseStack.forEach((node)=>{
+        results = this.getAdjacentByLambda(node, results)
+      })
+    }
+    return results
   }
 
   end (currNode)  {
+    if(currNode === undefined) return false
     const isAccept = this.acceptNodes.includes(currNode)
     if(!isAccept){
       //check lambda-adjacent nodes 
-      const nextStates = this.getNextStates(lambda, currNode)
+      const nextStates = this.getAdjacentByLambda(currNode, [])
         for(let state in nextStates){
-          if(this.end(nextStates[state].nextNode))
+          if(this.acceptNodes.includes(nextStates[state])){
             return true
+          }
         }
     }
     return isAccept
@@ -154,15 +176,21 @@ class NFA {
     if (!nextStates || nextStates.length === 0){ 
       return false
     }
-    for (let state in nextStates) {
-      if(nextStates[state].symbol === lambda){
-        if(this.acceptString(str, nextStates[state].nextNode))
-          return true
-      }
-      else if(this.acceptString(str.substring(1), nextStates[state].nextNode)) 
+
+    for(let i = 0; i < nextStates.length; i++){
+      if(this.acceptString(str.substring(1), nextStates[i]))
         return true
     }
     return false
+    // for (let state in nextStates) {
+    //   if(nextStates[state].symbol === lambda){
+    //     if(this.acceptString(str, nextStates[state].nextNode))
+    //       return true
+    //   }
+    //   else if(this.acceptString(str.substring(1), nextStates[state].nextNode)) 
+    //     return true
+    // }
+    // return false
   }
 
   //better naming but too late to be of use

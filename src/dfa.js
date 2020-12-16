@@ -23,6 +23,11 @@ class DFA extends NFA {
     })
   } 
 
+  //overwrite
+  getNextStates(transitionSymbol, currNode){
+    return currNode.transition(transitionSymbol)
+  }
+
   //Overrwrite
   end (currNode) {
     return this.acceptNodes.includes(currNode)

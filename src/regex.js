@@ -96,7 +96,7 @@ const parseConcatHelper = function(exp) {
   return result
 
 }
-const parseOrHelper = function(exp, sym) {
+const parseOrHelper = function(exp, sym='+') {
   const result = [] //strings split on symbol, accounting for paranetheses
   let parenCount = 0
   let currSubset = ''
