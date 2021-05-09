@@ -34,7 +34,7 @@ const nfa = regexToNFA('01+11')
 
 The following operations are accepted
 - '+': OR
-- '.' | '' : concatentaion
+- '.' : concatentaion
 - '\*' | Kleene Star
 
 Parantheses of course are allowed
@@ -54,6 +54,6 @@ const smallDFA = minDFA(largeDFA)
 ```
 
 # Conclusion
-This project is not groundbreaking, but it was a fun project for a class. It is also (apparently from my research while debuggin) one of the few programs in Javascript. I hope to continue this work when I have more time by creating similar tools in C++, which I think could be very fun.
+This project is not groundbreaking, but it was a fun project for a class. It is also (apparently from my research while debugging) one of the few programs in Javascript. I hope to continue this work when I have more time by creating similar tools in C++, which I think could be very fun.
 
 If you are a future student or someone who wants to know more, feel free to reach out. I am happy to explain what is going on for anything here :)
